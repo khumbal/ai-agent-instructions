@@ -1,0 +1,40 @@
+// Place your tool sets here...
+// Example:
+// {
+// 	"toolSetName": {
+// 		"tools": [
+// 			"someTool",
+// 			"anotherTool"
+// 		],
+// 		"description": "description",
+// 		"icon": "tools"
+// 	}
+// }
+{
+    "webResearcher": {
+        "tools": [
+            "webBrowser",
+            "dataAnalyzer"
+        ],
+        "description": "A tool set for conducting web research and analyzing data.",
+        "icon": "search"
+    },
+    "contentCreator": {
+        "tools": [
+            "textGenerator",
+            "imageCreator",
+            "videoEditor"
+        ],
+        "description": "A tool set for creating various types of content including text, images, and videos.",
+        "icon": "create"
+    },
+    "dataScientist": {
+        "tools": [
+            "dataCleaner",
+            "statisticalAnalyzer",
+            "visualizationTool"
+        ],
+        "description": "A tool set for cleaning, analyzing, and visualizing data.",
+        "icon": "chart"
+    }
+}

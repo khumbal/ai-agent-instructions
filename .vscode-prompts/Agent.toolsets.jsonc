@@ -1,0 +1,11 @@
+// Place your tool sets here...
+// Example:
+{
+	"toolSetName": {
+		"tools": [
+            // File ma
+		],
+		"description": "description",
+		"icon": "tools"
+	}
+}
