@@ -53,7 +53,9 @@ Before loading a skill, consider: Is this an implementation/analysis task that b
 | design, architecture, patterns | smart-design | any |
 | analyze system, use case, journey | system-journey-analyst | any |
 | tablet, webview, React native bridge | eapp-webview | *.tsx/jsx |
+| trade-off, worth it, which approach, reason | senior-reasoning | any |
 | check memory, proven approach | adaptive-discovery | any |
+| review session, audit agent, improve agent | agent-session-review | any |
 
 Prefer direct execution when you already have context, the scope is small (≤3 files), or you need tight iteration. Before delegating, know the exact files and scope — vague delegation wastes more than it saves.
 

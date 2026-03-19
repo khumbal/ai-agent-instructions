@@ -1,4 +1,5 @@
 ---
+name: "Delegation Protocol"
 description: 'Protocol for delegating tasks to sub-agents — includes model tier strategy (T1/T2/T3), context packages, briefing templates, and skill routing. Loaded when planning multi-step work, splitting complex tasks, choosing which skill to use, briefing sub-agents, or routing work by task type.'
 ---
 
@@ -132,6 +133,8 @@ SKILL: code-review
 | Doc updates | Main agent | none | T2 |
 | Memory save | @MemoryManager | none | T3 |
 | Codebase exploration | @Explore | none | T3 |
+| Session/agent review | Main agent | `agent-session-review` | T1 |
+| Decision/trade-off reasoning | Main agent | `senior-reasoning` | T1 |
 | Simple edit (<15 lines) | Main agent | none | — |
 
 ## Depth Guide

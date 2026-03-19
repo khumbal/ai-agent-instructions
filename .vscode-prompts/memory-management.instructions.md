@@ -1,4 +1,5 @@
 ---
+name: "Memory Management"
 description: 'Rules for delegating memory operations to @MemoryManager sub-agent (free model, 0 premium cost). Loaded when saving session progress, codebase facts, reviewing memory, or preparing conversation handoff.'
 ---
 
