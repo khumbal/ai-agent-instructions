@@ -5,14 +5,45 @@ set -euo pipefail
 INPUT=$(cat /dev/stdin)
 TOOL_NAME=$(echo "$INPUT" | python3 -c "import sys,json;print(json.load(sys.stdin).get('tool_name',''))" 2>/dev/null || echo "")
 
-# --- Audit logging ---
+# --- Audit logging with rotation ---
 AUDIT_LOG="$HOME/.copilot/audit.log"
 mkdir -p "$(dirname "$AUDIT_LOG")"
+# Rotate if > 1MB
+if [ -f "$AUDIT_LOG" ]; then
+  LOG_SIZE=$(stat -f%z "$AUDIT_LOG" 2>/dev/null || stat -c%s "$AUDIT_LOG" 2>/dev/null || echo "0")
+  if [ "$LOG_SIZE" -gt 1048576 ] 2>/dev/null; then
+    mv "$AUDIT_LOG" "${AUDIT_LOG}.$(date +%Y%m%d%H%M%S).old" 2>/dev/null || true
+    # Keep only last 5 rotated logs
+    ls -t "${AUDIT_LOG}".*.old 2>/dev/null | tail -n +6 | xargs rm -f 2>/dev/null || true
+  fi
+fi
 TS=$(date +%Y-%m-%dT%H:%M:%S)
 echo "[$TS] tool=$TOOL_NAME" >> "$AUDIT_LOG" 2>/dev/null || true
 
-# --- Guard: only check terminal commands ---
-if [ "$TOOL_NAME" != "run_in_terminal" ]; then
+# --- Guard: protect sensitive files from Write/Edit ---
+if [ "$TOOL_NAME" = "Write" ] || [ "$TOOL_NAME" = "Edit" ]; then
+  FILE_PATH=$(echo "$INPUT" | python3 -c "
+import sys, json
+data = json.load(sys.stdin)
+ti = data.get('tool_input', {})
+if isinstance(ti, str):
+    import json as j; ti = j.loads(ti)
+print(ti.get('file_path', ''))
+" 2>/dev/null || echo "")
+
+  if echo "$FILE_PATH" | grep -qE '\.env$|credentials|\.secret|id_rsa|\.pem$'; then
+    echo "[$TS]   ASK: Write to sensitive file $FILE_PATH" >> "$AUDIT_LOG" 2>/dev/null || true
+    python3 -c "
+import json
+print(json.dumps({'hookSpecificOutput':{'hookEventName':'PreToolUse','permissionDecision':'ask','permissionDecisionReason':'Writing to sensitive file — requires confirmation'}}))"
+    exit 0
+  fi
+  echo '{"hookSpecificOutput":{"hookEventName":"PreToolUse","permissionDecision":"allow"}}'
+  exit 0
+fi
+
+# --- Guard: only check Bash commands ---
+if [ "$TOOL_NAME" != "Bash" ]; then
   echo '{"hookSpecificOutput":{"hookEventName":"PreToolUse","permissionDecision":"allow"}}'
   exit 0
 fi

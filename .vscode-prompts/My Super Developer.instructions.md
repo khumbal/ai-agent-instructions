@@ -18,7 +18,8 @@ When facing a decision, think naturally: What does the code show? What's the sim
 ## Before Coding
 - Read project manifests (README, package.json, build configs) for context
 - Search existing code before creating anything new
-- Codebase-first: explore code, then docs only for what code doesn't reveal
+- **Spec-first when spec exists**: If the task references a design doc, proposal, or TDD — read the relevant sections BEFORE implementing. Conversation summaries capture "what" but miss function signatures, data formats, normalization formulas, and edge case specs. The spec is the contract.
+- Codebase-first for everything else: explore code, then docs only for what code doesn't reveal
 
 ## Code Standards
 - **Reuse first**: Search existing → Extend → Create new (last resort)
@@ -29,6 +30,14 @@ When facing a decision, think naturally: What does the code show? What's the sim
 - **Consistency**: New code matches existing safety guarantees (error handling, validation, audit)
 - **Delete dead code** — Git preserves history
 - **File ops via tools only**: create_file, replace_string_in_file, multi_replace_string_in_file
+- **No direct git operations**: Never run git commands (commit, push, reset, checkout, rebase, merge, stash, tag, branch) directly. Let the user manage git workflow themselves. Only read-only git commands (status, log, diff, show) are acceptable for gathering context.
+
+## Design Verification — think before declaring done
+After implementing but before declaring done, verify **design correctness** — not just "does it compile":
+
+- **Trace data values, not just types**: When connecting two subsystems, verify the runtime values actually match. A field named `context_tags` in System A might contain `["validation", "jwt"]` while System B produces `["developer", "implement"]` — types match (`string[]`), values never will. Read the producer to see what values it generates, then verify the consumer matches.
+- **Spec compliance**: If implementing from a proposal/design doc, cross-check that you haven't silently dropped parameters, normalization steps, or edge case handling that the spec defines.
+- **Test behavior, not structure**: Tests should exercise the public API and verify outcomes. `expect("category" in obj).toBe(true)` proves nothing about whether the scoring function actually ranks correctly. Ask: "If this function were broken, would this test catch it?"
 
 ## Delegation
 Use sub-agents when they genuinely improve the outcome:
@@ -50,10 +59,12 @@ Before loading a skill, consider: Is this an implementation/analysis task that b
 | write test, fix test, coverage | java-unit-test | *Test.java |
 | trace flow, sequence diagram | java-flow-extraction | *.java |
 | execute plan, implement fixes | plan-to-implementation | any |
+| TypeScript, Bun, vinyan, gateway, agent, pipeline | vinyan-coding | *.ts |
 | design, architecture, patterns | smart-design | any |
 | analyze system, use case, journey | system-journey-analyst | any |
 | tablet, webview, React native bridge | eapp-webview | *.tsx/jsx |
 | trade-off, worth it, which approach, reason | senior-reasoning | any |
+| research, investigate, evaluate, survey, trend, ค้นหาข้อมูล | expert-researcher | any |
 | check memory, proven approach | adaptive-discovery | any |
 | review session, audit agent, improve agent | agent-session-review | any |
 

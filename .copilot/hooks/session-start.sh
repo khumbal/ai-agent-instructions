@@ -32,11 +32,44 @@ elif [ -f "package.json" ]; then
   CONTEXT_PARTS+=("Build: npm/bun")
 fi
 
+# --- Trading project: Risk snapshot ---
+if [ -f "positions/pnl_state.json" ]; then
+  PNL_INFO=$(python3 -c "
+import json, sys
+try:
+    with open('positions/pnl_state.json') as f:
+        d = json.load(f)
+    parts = []
+    if 'daily_pnl_pct' in d: parts.append(f\"Daily PnL: {d['daily_pnl_pct']:.2%}\")
+    if 'max_drawdown_pct' in d: parts.append(f\"Max DD: {d['max_drawdown_pct']:.2%}\")
+    paused = d.get('paused_today', False)
+    stopped = d.get('system_stopped', False)
+    if stopped: parts.append('SYSTEM STOPPED')
+    elif paused: parts.append('PAUSED TODAY')
+    else: parts.append('Trading OK')
+    print(' | '.join(parts))
+except Exception:
+    pass
+" 2>/dev/null || true)
+  [ -n "$PNL_INFO" ] && CONTEXT_PARTS+=("Risk: $PNL_INFO")
+fi
+
+# --- Trading project: Signal queue health ---
+SIGNAL_WARNINGS=""
+for dir in signals/pending signals/executing signals/failed; do
+  if [ -d "$dir" ]; then
+    count=$(find "$dir" -maxdepth 1 -name "*.json" -type f 2>/dev/null | wc -l | tr -d ' ')
+    if [ "$count" -gt 0 ]; then
+      SIGNAL_WARNINGS="${SIGNAL_WARNINGS}${dir##*/}=$count "
+    fi
+  fi
+done
+[ -n "$SIGNAL_WARNINGS" ] && CONTEXT_PARTS+=("Signals: ${SIGNAL_WARNINGS% }")
+
 # Join context
 CONTEXT=$(IFS=' | '; echo "${CONTEXT_PARTS[*]}")
 
 if [ -n "$CONTEXT" ]; then
-  # Output JSON with additionalContext
   python3 -c "
 import json, sys
 out = {'hookSpecificOutput': {'hookEventName': 'SessionStart', 'additionalContext': sys.argv[1]}}

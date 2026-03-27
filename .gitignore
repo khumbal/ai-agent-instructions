@@ -1,3 +1,34 @@
-ide/
-
 history.jsonl
+###############################
+# System/Editor/OS files
+###############################
+.DS_Store
+*.lock
+.idea/
+.vscode/
+
+###############################
+# Copilot/Agent/Claude artifacts
+###############################
+.copilot/logs/
+.copilot/session-backups/
+.copilot/ide/
+.copilot/session-state/
+.copilot/audit.log
+.copilot/config.json
+
+###############################
+# History, session, backup
+###############################
+history.jsonl
+memories/session/
+
+###############################
+# General
+###############################
+node_modules/
+dist/
+build/
+tmp/
+*.pyc
+__pycache__/

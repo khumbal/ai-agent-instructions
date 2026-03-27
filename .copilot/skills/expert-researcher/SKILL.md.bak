@@ -1,0 +1,987 @@
+---
+name: expert-researcher
+description: "Multi-source research system — systematically searches Local files, Web, Search Engines, GitHub/Community, and Academic sources to answer complex questions with citation-backed findings. Decomposes questions into sub-queries, routes to optimal sources, gathers evidence in parallel, cross-references for consistency, and synthesizes structured research reports with confidence levels. Use when the user needs deep research, technology evaluation, trend analysis, best practice discovery, or any question requiring evidence from multiple sources."
+argument-hint: "The research question, topic, or technology to investigate"
+metadata:
+  author: phumin-k
+  version: "1.0"
+  scope: "**"
+  tier: T1
+  triggers:
+    - "research"
+    - "ค้นหาข้อมูล"
+    - "investigate"
+    - "compare technologies"
+    - "what's the best approach for"
+    - "trend"
+    - "state of the art"
+    - "how does X work"
+    - "find information about"
+    - "evaluate"
+    - "survey"
+    - "literature review"
+    - "deep dive"
+    - "analysis of"
+    - "pros and cons"
+    - "หาข้อมูล"
+    - "วิจัย"
+    - "เทรนด์"
+---
+
+# Expert Researcher — Multi-Source Intelligence System
+
+## Philosophy
+
+> **"ข้อมูลที่ไม่มี citation = ความเห็น ไม่ใช่ research"**
+
+Research quality comes from **triangulation** — the same finding confirmed by multiple independent sources is far more reliable than a single reference. The researcher's job is not just to find answers, but to assess **how confident** we should be in those answers.
+
+**Core principle:** Decompose → Route → Gather → Cross-reference → Synthesize. Never present a single source as truth.
+
+## When to use this skill
+
+- Deep research on a technology, framework, pattern, or approach
+- Technology comparison / evaluation (X vs Y vs Z)
+- Trend analysis — what's current, what's emerging, what's declining
+- Finding best practices backed by community consensus + official docs
+- Investigating unfamiliar domains before making architectural decisions
+- Academic/RFC/spec research for protocol or standard implementation
+- Social signal analysis — what are developers actually experiencing (not just marketing)
+- Gap analysis — what does the user's codebase do vs. what the community recommends
+
+## What this skill is NOT
+
+- Not for codebase-only exploration → use `Explore` agent or `adaptive-discovery`
+- Not for code review → use `code-review`
+- Not for design decisions → use `smart-design` (but researcher can **feed** smart-design with evidence)
+- Not for implementation → use `plan-to-implementation`
+
+This skill **gathers and validates evidence**. Other skills **act on** that evidence.
+
+---
+
+## System Architecture
+
+```
+Research Question
+    │
+    ▼
+┌─────────────────────────────────────────────┐
+│  Phase 1: DECOMPOSE                         │
+│  Break question → atomic sub-questions      │
+│  Tag each with: scope, source-hint, priority│
+└─────────────┬───────────────────────────────┘
+              │
+              ▼
+┌─────────────────────────────────────────────┐
+│  Phase 2: ROUTE                             │
+│  Map sub-questions → optimal source(s)      │
+│  ┌──────────┬──────────┬──────────┐         │
+│  │ Local    │ Web      │ Academic │         │
+│  │ Codebase │ Search   │ GitHub   │         │
+│  │ Memory   │ Docs     │ Community│         │
+│  └──────────┴──────────┴──────────┘         │
+└─────────────┬───────────────────────────────┘
+              │
+              ▼
+┌─────────────────────────────────────────────┐
+│  Phase 3: GATHER (parallel where possible)  │
+│  Execute searches across all routed sources │
+│  Extract: facts, quotes, data, links        │
+└─────────────┬───────────────────────────────┘
+              │
+              ▼
+┌─────────────────────────────────────────────┐
+│  Phase 4: VALIDATE & CROSS-REFERENCE        │
+│  Check: consistency, recency, credibility   │
+│  Flag: contradictions, stale info, bias     │
+└─────────────┬───────────────────────────────┘
+              │
+              ▼
+┌─────────────────────────────────────────────┐
+│  Phase 5: SYNTHESIZE & REPORT               │
+│  Merge findings → structured report         │
+│  Include: confidence, citations, gaps       │
+└─────────────────────────────────────────────┘
+```
+
+---
+
+## Phase 1: DECOMPOSE — Break the Question
+
+Every research question, no matter how simple it sounds, has sub-dimensions. Decompose before searching.
+
+### Decomposition Template
+
+```
+RESEARCH QUESTION: [User's original question]
+
+SUB-QUESTIONS:
+  Q1: [Factual/definitional — what IS this?]
+      Source hint: official docs, specs
+      Priority: HIGH (foundation)
+
+  Q2: [Current state — how is it used today?]
+      Source hint: web search, GitHub trending
+      Priority: HIGH
+
+  Q3: [Community signal — what are developers saying?]
+      Source hint: GitHub issues, Stack Overflow, Reddit, HN
+      Priority: MEDIUM
+
+  Q4: [Comparison — how does it compare to alternatives?]
+      Source hint: benchmarks, comparison articles, community polls
+      Priority: MEDIUM
+
+  Q5: [Trajectory — where is it heading?]
+      Source hint: changelogs, roadmaps, conference talks, RFCs
+      Priority: LOW (nice-to-have)
+
+  Q6: [Local relevance — how does this apply to our codebase?]
+      Source hint: local search, memory
+      Priority: HIGH (if applicable)
+```
+
+### Decomposition Rules
+
+- **Max 7 sub-questions** — more = unfocused research, less = shallow
+- **Each sub-question must be independently answerable** — not dependent on others
+- **Tag priority** — HIGH questions get searched first; LOW can be skipped under time pressure
+- **Tag source hint** — guides Phase 2 routing but doesn't lock it
+
+---
+
+## Phase 2: ROUTE — Map Questions to Sources
+
+### Source Channel Matrix
+
+| Channel | Best For | Tools | Credibility | Freshness |
+|---------|----------|-------|-------------|-----------|
+| **Local** | Codebase facts, project conventions, past decisions | `semantic_search`, `grep_search`, `file_search`, `memory` | ★★★★★ (ground truth) | Current |
+| **Official Docs** | API specs, framework behavior, language features | `webSearch` → official domain, `fetch_webpage` | ★★★★★ | Varies |
+| **Web Search** | General knowledge, tutorials, blog posts | `webSearch` | ★★★☆☆ (verify) | Check date |
+| **GitHub/Community** | Real-world usage, issues, workarounds, sentiment | `webSearch` → site:github.com / stackoverflow.com | ★★★★☆ | Check date |
+| **Academic/RFC** | Algorithms, protocols, formal proofs, standards | `webSearch` → site:arxiv.org / rfc-editor.org | ★★★★★ | Varies |
+| **Social/Trends** | Developer sentiment, adoption trends, pain points | `webSearch` → site:reddit.com / news.ycombinator.com / x.com | ★★☆☆☆ (signal, not truth) | Very fresh |
+
+### Routing Decision Tree
+
+```
+For each sub-question:
+
+1. Is it about OUR codebase or project?
+   YES → Local (memory + codebase search)
+   
+2. Is it a factual/spec question?
+   YES → Official Docs first, then Web Search for clarification
+   
+3. Is it about real-world usage or problems?
+   YES → GitHub issues + Stack Overflow + Community
+   
+4. Is it about developer sentiment or trends?
+   YES → Social (Reddit, HN, X/Twitter) + GitHub stars/activity
+   
+5. Is it about algorithms or formal concepts?
+   YES → Academic (arXiv, papers, RFCs)
+   
+6. Is it a comparison or evaluation?
+   YES → Multi-source (benchmarks + docs + community experience)
+```
+
+### Source Execution Strategies
+
+#### Local Search Strategy
+```
+1. Memory first: check /memories/repo/ and /memories/ for past findings
+2. Codebase search: semantic_search for concept, grep_search for specifics
+3. Local docs: search README, docs/, CHANGELOG for project-specific info
+```
+
+#### Web Search Strategy
+```
+Construct queries systematically:
+- Factual:     "{topic} official documentation 2025 2026"
+- How-to:      "{topic} best practices production {language}"
+- Comparison:  "{topic A} vs {topic B} benchmark comparison 2025"
+- Problems:    "{topic} common issues gotchas production"
+- Trends:      "{topic} adoption trend 2025 2026 survey"
+- Site-scoped: "{query} site:github.com" / "site:stackoverflow.com"
+```
+
+#### GitHub/Community Strategy
+```
+1. webSearch: "{topic} site:github.com issues" — find real problems
+2. webSearch: "{topic} site:stackoverflow.com" — find common questions
+3. fetch_webpage on high-signal results for detailed reading
+4. Look for: issue count, last activity date, maintainer responsiveness
+```
+
+#### Academic Strategy
+```
+1. webSearch: "{topic} arxiv paper 2024 2025" — recent papers
+2. webSearch: "{topic} RFC specification" — standards
+3. fetch_webpage on PDF/HTML versions for key sections
+4. Extract: methodology, findings, limitations
+```
+
+#### Social/Trends Strategy
+```
+1. webSearch: "{topic} site:reddit.com r/programming OR r/webdev"
+2. webSearch: "{topic} site:news.ycombinator.com"
+3. webSearch: "{topic} developer survey 2025"
+4. Interpret as SIGNAL not TRUTH — look for consensus patterns
+```
+
+---
+
+## Phase 3: GATHER — Execute Research
+
+### Execution Rules
+
+1. **Parallel where possible** — independent sub-questions can search simultaneously
+2. **Depth budget** — allocate search effort by priority:
+   - HIGH: up to 3 searches + 2 page fetches per sub-question
+   - MEDIUM: up to 2 searches + 1 page fetch
+   - LOW: 1 search, skim results only
+3. **Extract, don't dump** — from each source, extract:
+   ```
+   FINDING: [one-sentence fact or insight]
+   SOURCE:  [URL or file:line reference]
+   DATE:    [when published/updated]
+   TYPE:    [fact | opinion | benchmark | anecdote]
+   ```
+4. **Stop when saturated** — if 3 sources say the same thing, move on
+5. **Note contradictions** — if sources disagree, record both sides with citations
+
+### Source Credibility Assessment
+
+When gathering, assess each source:
+
+| Signal | High Credibility | Low Credibility |
+|--------|-----------------|-----------------|
+| **Author** | Core maintainer, known expert | Anonymous, marketing team |
+| **Date** | Within 12 months | >2 years old (for fast-moving tech) |
+| **Evidence** | Benchmarks, code examples, data | "I think", "probably", "should be" |
+| **Venue** | Official docs, peer-reviewed, reputable blog | SEO content farm, AI-generated fluff |
+| **Corroboration** | Multiple independent sources agree | Single uncorroborated claim |
+| **Specificity** | Exact versions, configurations, measuring method | Vague "faster" / "better" |
+
+### Red Flags — Findings to Downgrade
+
+- Blog post that's actually a product promotion
+- Benchmark without methodology or hardware specs
+- "Best X in 2025" listicle articles (often SEO-optimized, not evidence-based)
+- Stack Overflow answer with 0 upvotes and no accepted mark
+- GitHub issue from 3+ years ago with no resolution
+- Social media hot takes without supporting evidence
+
+---
+
+## Phase 4: VALIDATE & CROSS-REFERENCE
+
+After gathering, before synthesizing:
+
+### Consistency Check
+```
+For each key finding:
+  - How many independent sources confirm it?
+    ≥3 → HIGH confidence
+    2   → MEDIUM confidence  
+    1   → LOW confidence (flag as "single-source claim")
+    0   → UNSUPPORTED (do not include as finding)
+```
+
+### Recency Check
+```
+For each finding:
+  - Is the source date within the topic's relevance window?
+    Stable tech (SQL, HTTP, TCP):    5 years OK
+    Active tech (React, Bun, Deno):  12 months preferred
+    Bleeding edge (AI, LLM):        6 months max
+    Social sentiment:                3 months preferred
+```
+
+### Contradiction Resolution
+```
+When sources disagree:
+  1. Check recency — newer beats older (tech evolves)
+  2. Check specificity — concrete data beats vague claims
+  3. Check authority — maintainer > user > blogger
+  4. If still unresolved → report BOTH perspectives with citations
+     Label: "CONTESTED — evidence on both sides"
+```
+
+### Bias Detection
+```
+Watch for:
+- Vendor publishing comparison that favors their product
+- "Migrated from X to Y" posts (survivorship bias — no "stayed with X" posts)
+- Conference talks that oversell (audience was self-selected)
+- GitHub stars ≠ production readiness (popularity ≠ quality)
+```
+
+---
+
+## Phase 5: SYNTHESIZE & REPORT
+
+### Report Structure
+
+```markdown
+# Research Report: {Topic}
+
+## Executive Summary
+[2-3 sentences: what we found, confidence level, key takeaway]
+
+## Key Findings
+
+### Finding 1: {Title}
+**Confidence:** HIGH | MEDIUM | LOW
+**Summary:** [1-2 sentences]
+**Evidence:**
+- [Source 1 — citation with URL/file ref]
+- [Source 2 — citation with URL/file ref]
+- [Source 3 — if available]
+**Caveats:** [Any limitations or conditions]
+
+### Finding 2: {Title}
+...
+
+## Comparisons (if applicable)
+| Aspect | Option A | Option B | Option C |
+|--------|----------|----------|----------|
+| ... | ... | ... | ... |
+
+**Winner by aspect:** [brief analysis]
+
+## Community Signal
+[What developers are actually saying — from GitHub, SO, Reddit]
+- Positive signals: ...
+- Concerns/pain points: ...
+- Adoption trend: growing / stable / declining
+
+## Contradictions & Open Questions
+- [Area where sources disagree — both sides cited]
+- [Questions we couldn't answer — suggested next steps]
+
+## Relevance to Our Project
+[How findings apply to the current codebase/task]
+
+## Sources
+[Numbered list of all sources used, with URLs and access dates]
+```
+
+### Confidence Levels
+
+| Level | Meaning | Criteria |
+|-------|---------|----------|
+| **HIGH** | Strong evidence, safe to act on | ≥3 independent sources agree, recent, credible |
+| **MEDIUM** | Reasonable evidence, worth considering | 2 sources OR single high-authority source |
+| **LOW** | Weak evidence, treat as hypothesis | Single source, old, or from low-credibility venue |
+| **CONTESTED** | Active disagreement in the community | Multiple credible sources contradict each other |
+
+### Synthesis Rules
+
+- **Lead with confidence levels** — reader should know reliability before details
+- **Cite everything** — every claim needs a source link or file reference
+- **Separate fact from opinion** — clearly label which is which
+- **Include negative results** — "We searched for X and found no evidence" is valuable
+- **End with actionable takeaway** — "Based on this research, the recommended approach is..."
+
+---
+
+## Research Patterns (Common Scenarios)
+
+### Pattern 1: Technology Evaluation
+
+```
+Question: "Should we use X for our project?"
+
+Decompose to:
+  Q1: What is X? (official docs)
+  Q2: How mature is X? (GitHub activity, version history, funding)
+  Q3: What are known problems? (GitHub issues, SO questions)
+  Q4: How does X compare to alternatives? (benchmarks, comparisons)
+  Q5: What do experienced users say? (community signal)
+  Q6: Does X fit our stack? (local codebase analysis)
+  
+Output: Evaluation matrix + recommendation with confidence
+```
+
+### Pattern 2: Best Practice Discovery
+
+```
+Question: "What's the recommended way to do Y?"
+
+Decompose to:
+  Q1: What do official docs say? (framework docs)
+  Q2: What does the community do? (GitHub repos, SO accepted answers)
+  Q3: What are known anti-patterns? (blog posts, issue trackers)
+  Q4: How does our codebase currently do it? (local search)
+  Q5: Any recent changes or deprecations? (changelogs, migration guides)
+  
+Output: Recommended approach + anti-patterns + migration path
+```
+
+### Pattern 3: Trend Analysis
+
+```
+Question: "What's the state of Z in 2025/2026?"
+
+Decompose to:
+  Q1: Current market position (surveys, reports)
+  Q2: Adoption trajectory (npm downloads, GitHub stars over time)
+  Q3: Ecosystem health (active contributors, release frequency, funding)
+  Q4: Community sentiment (Reddit, HN, X discussions)
+  Q5: Competing alternatives gaining ground? (emerging tech)
+  Q6: Expert predictions (conference talks, blog posts from maintainers)
+  
+Output: State summary + trajectory assessment + risk factors
+```
+
+### Pattern 4: Debug/Issue Investigation
+
+```
+Question: "Why is X happening / how to fix X?"
+
+Decompose to:
+  Q1: What are the symptoms exactly? (local investigation)
+  Q2: Is this a known issue? (GitHub issues, SO)
+  Q3: What's the root cause mechanism? (docs, source code, blog posts)
+  Q4: What workarounds exist? (community solutions)
+  Q5: Is there an official fix? (changelogs, PRs)
+  
+Output: Root cause + workarounds ranked by quality + recommended fix
+```
+
+### Pattern 5: Architecture Research
+
+```
+Question: "How should we architect feature/system X?"
+
+Decompose to:
+  Q1: What patterns exist for this? (architectural literature, blogs)
+  Q2: How do similar projects solve it? (GitHub repos, case studies)
+  Q3: What are the trade-offs? (academic papers, experience reports)
+  Q4: What does our codebase already support? (local analysis)
+  Q5: What constraints does our stack impose? (framework docs)
+  Q6: What do experts recommend? (conference talks, books)
+  
+Output: Pattern options + trade-off matrix + recommendation for our context
+```
+
+---
+
+## Efficiency Guidelines
+
+### Search Cost Budget
+- **Quick research** (simple question): 3-5 tool calls max
+- **Medium research** (comparison/evaluation): 8-12 tool calls
+- **Deep research** (full survey/trend analysis): 15-20 tool calls
+- **Never exceed 25 tool calls** — if you aren't converging, report what you have
+
+### Parallel Execution
+```
+GOOD — parallel independent sub-questions:
+  Batch 1: [Local search for Q1] + [Web search for Q2] + [Web search for Q3]
+  Batch 2: [Fetch top results from Batch 1] + [GitHub search for Q4]
+  Batch 3: [Synthesize all findings]
+
+BAD — sequential everything:
+  Step 1: Search Q1... wait... Step 2: Search Q2... wait... (wastes turns)
+```
+
+### When to Go Deep vs. Skim
+```
+GO DEEP (fetch + read full page):
+  - Official documentation for the core question
+  - High-signal GitHub issue with detailed discussion
+  - Benchmark with methodology section
+  - Academic paper's abstract + findings
+
+SKIM (search results only):
+  - Confirming a finding already supported by 2 sources
+  - Social media sentiment (volume matters more than depth)
+  - Date/version checking
+```
+
+### Sub-Agent Delegation for Research
+```
+When research spans ≥3 independent topics:
+  - Main agent: orchestrates phases, synthesizes final report
+  - Explore agent: local codebase investigation (T3)
+  - Main agent handles web/social/academic (requires tool access)
+  
+Never delegate web search to sub-agents — they may not have tool access.
+```
+
+---
+
+## Anti-Patterns (What NOT to Do)
+
+| Anti-Pattern | Why It's Bad | Instead |
+|-------------|-------------|---------|
+| **Search once, trust first result** | Single source = opinion, not research | Always seek ≥2 independent confirmations |
+| **Dump 20 links without synthesis** | User wanted answers, not homework | Extract findings, cite inline, synthesize |
+| **Present marketing as evidence** | Vendor claims are biased by design | Seek independent benchmarks and user reports |
+| **Ignore contradictions** | Hiding disagreement is dishonest | Report both sides, explain why they differ |
+| **No dates on sources** | 3-year-old advice may be dangerously wrong | Always check and report source dates |
+| **All web, no local** | Ignoring the codebase's own context | Always check local relevance first |
+| **Research without stopping** | Diminishing returns after saturation | Set a budget, stop when findings converge |
+| **Present opinion as fact** | Erodes trust in the research | Label: fact / opinion / anecdote / contested |
+| **Skip negative results** | "We found nothing" is still a finding | Report what you searched for and didn't find |
+| **No confidence levels** | Reader can't assess reliability | Every finding gets HIGH/MEDIUM/LOW/CONTESTED |
+
+---
+
+## Advanced: Tool Composition Recipes
+
+The skill's power comes from **chaining tools strategically** — not just calling one at a time.
+
+### Available Tools & Signatures
+
+| Tool | Input | Best For |
+|------|-------|----------|
+| `webSearch` | `query` (string) | Broad discovery, finding URLs, general knowledge |
+| `fetch_webpage` | `urls` (string[]) + `query` (string) | Reading specific pages, the `query` guides content extraction |
+| `github_repo` | `repo` (owner/repo) + `query` (string) | Searching code inside a specific GitHub repository |
+| `semantic_search` | `query` (string) | Local codebase concept search |
+| `grep_search` | `query` + `includePattern` | Local exact text/regex search |
+| `memory` | `command` + `path` | Past research, repo knowledge, session notes |
+
+### Key Insight: `fetch_webpage` query parameter
+
+The `query` parameter in `fetch_webpage` is NOT just a URL fetcher — it **guides content extraction**. A focused query returns dramatically better results than a generic one.
+
+```
+BAD:  fetch_webpage(urls: ["https://github.com/org/repo"], query: "")
+GOOD: fetch_webpage(urls: ["https://github.com/org/repo"], query: "architecture design patterns core concepts")
+BEST: fetch_webpage(urls: ["https://github.com/org/repo"], query: "what design patterns and architectural decisions does this project use")
+```
+
+### Recipe 1: GitHub Repository Deep Dive
+
+**Use case:** "Research concepts and design from https://github.com/org/project"
+
+```
+Step 1 — README & Overview (parallel)
+  fetch_webpage:
+    urls: ["https://github.com/{owner}/{repo}"]
+    query: "project purpose, architecture, core concepts, design philosophy"
+  webSearch:
+    query: "{project name} architecture design blog explanation"
+
+Step 2 — Source Structure & Key Files (parallel, informed by Step 1)
+  fetch_webpage:
+    urls: ["https://github.com/{owner}/{repo}/tree/main/src"]  (or /lib, /core)
+    query: "directory structure, module organization"
+  github_repo:
+    repo: "{owner}/{repo}"
+    query: "architecture OR design OR pattern OR core"
+  fetch_webpage:                              ← if Step 1 revealed docs/
+    urls: ["https://github.com/{owner}/{repo}/tree/main/docs"]
+    query: "architecture design documentation"
+
+Step 3 — Read Core Source Code (use RAW URLs for clean code)
+  ⚠️ CRITICAL: Use raw.githubusercontent.com for actual code reading
+  
+  Raw URL pattern:
+    https://raw.githubusercontent.com/{owner}/{repo}/{branch}/{path}
+  
+  Example:
+    https://raw.githubusercontent.com/alibaba/hiclaw/main/src/core/engine.ts
+
+  Read priority:
+    1. Entry point (main/index) → understand bootstrap flow
+    2. Core types/interfaces → understand data model & contracts  
+    3. Main engine/orchestrator → understand central logic
+    4. Extension/plugin system → understand growth design
+
+  fetch_webpage:
+    urls: ["https://raw.githubusercontent.com/{owner}/{repo}/main/{key-file-1}"]
+    query: "design patterns, key abstractions, data flow"
+  fetch_webpage:
+    urls: ["https://raw.githubusercontent.com/{owner}/{repo}/main/{key-file-2}"]
+    query: "interfaces, extension points, core logic"
+
+  For each file, extract:
+    - Design patterns (Factory, Strategy, Pipeline, etc.)
+    - Key abstractions and responsibilities
+    - Data flow: input → transform → output
+    - Extension points: how to add new capabilities
+    - Clever techniques worth learning
+
+Step 4 — External Context (parallel)
+  webSearch: "{project name} tutorial how it works internally"
+  webSearch: "{project name} vs alternatives comparison"
+  webSearch: "{project name} site:reddit.com OR site:news.ycombinator.com"
+
+Step 5 — Synthesize
+  Combine: project vision + architecture + code-level patterns + community reception
+  Output: Structured report with "What We Can Reuse" section
+  Include: code evidence for each pattern claim (file + what pattern + why)
+```
+
+### Recipe 2: Technology Comparison Pipeline
+
+**Use case:** "Compare X vs Y vs Z for our use case"
+
+```
+Step 1 — Official Positions (parallel, one per technology)
+  For each tech:
+    webSearch: "{tech} official site features overview 2025"
+    fetch_webpage: [official URL] query: "features, limitations, use cases"
+
+Step 2 — Head-to-Head (parallel)
+  webSearch: "{X} vs {Y} benchmark comparison 2025"
+  webSearch: "{X} vs {Y} vs {Z} which to choose"
+  webSearch: "{X} vs {Y} site:stackoverflow.com"
+
+Step 3 — Community Signal (parallel)
+  webSearch: "{X} problems issues production site:github.com"
+  webSearch: "{Y} problems issues production site:github.com"
+  webSearch: "{X} vs {Y} site:reddit.com"
+
+Step 4 — Fetch Deep Reads (top 2-3 comparison articles from Steps 2-3)
+  fetch_webpage: [urls from search results] query: "benchmark methodology results trade-offs"
+
+Step 5 — Local Fit
+  semantic_search: "{technology concept}" in current codebase
+  Assess: migration effort, compatibility, team familiarity
+
+Step 6 — Synthesize comparison matrix
+```
+
+### Recipe 3: Academic/Standards Research
+
+**Use case:** "Research the algorithm/protocol/standard behind X"
+
+```
+Step 1 — Find the Paper/RFC
+  webSearch: "{topic} arxiv paper 2024 2025"
+  webSearch: "{topic} RFC specification IETF"
+  webSearch: "{topic} original paper author"
+
+Step 2 — Read the Source (focused extraction)
+  fetch_webpage:
+    urls: [paper URL or RFC URL]
+    query: "abstract, methodology, key algorithm, results, limitations"
+
+Step 3 — Implementations & Practical Usage
+  webSearch: "{algorithm/protocol} implementation guide tutorial"
+  webSearch: "{algorithm/protocol} open source implementation github"
+  github_repo: (if a reference impl exists)
+    repo: "{owner}/{repo}"
+    query: "core algorithm implementation"
+
+Step 4 — Synthesize: theory + practical implementation + gotchas
+```
+
+### Recipe 4: Rapid Contextual Search (< 5 calls)
+
+**Use case:** Quick answer with evidence, not a full report
+
+```
+Batch 1 (parallel):
+  webSearch: "{question} {current year}"
+  memory: check /memories/repo/ for past findings
+  semantic_search: (if question is codebase-related)
+
+Batch 2 (conditional — only if Batch 1 needs clarification):
+  fetch_webpage: [best URL from Batch 1] query: "{specific aspect to clarify}"
+
+Done — synthesize into 3-5 sentence answer with citations
+```
+
+---
+
+## Advanced: Query Crafting Intelligence
+
+Search quality depends on **how you ask**, not just what you ask. A well-crafted query returns 10x better results.
+
+### Search Operator Toolkit
+
+```
+Operator          | Example                                    | Effect
+──────────────────┼────────────────────────────────────────────┼─────────────────────
+site:             | "React hooks site:github.com"              | Limit to one domain
+intitle:          | "intitle:benchmark Bun vs Node"            | Title must contain word
+"exact phrase"    | "event-driven architecture patterns"       | Exact match
+-exclude          | "React state management -Redux"            | Exclude term
+OR                | "Bun OR Deno runtime benchmark"            | Either term
+filetype:         | "system design filetype:pdf"               | Specific file type
+after:YYYY-MM-DD  | "LLM agents after:2025-01-01"              | Recency filter
+```
+
+### Multi-Pass Query Strategy
+
+When the first search returns poor results, **pivot** instead of repeating:
+
+```
+Pass 1 — Direct Query:
+  "multi-agent orchestration framework TypeScript"
+  → If results are generic/marketing...
+
+Pass 2 — Specificity Pivot:
+  "multi-agent task decomposition dispatch parallel TypeScript implementation"
+  → If results are still weak...
+
+Pass 3 — Exemplar Pivot:
+  "CrewAI OR AutoGen OR MetaGPT architecture design how it works"
+  → Find KNOWN projects that solve similar problems
+
+Pass 4 — Community Pivot:
+  "building multi-agent system lessons learned site:reddit.com OR site:news.ycombinator.com"
+  → Skip docs, find real experience
+```
+
+### Query Templates by Research Type
+
+```
+FACTUAL:
+  "{concept} official documentation"
+  "{concept} specification RFC"
+  "{concept} how does it work internally"
+
+COMPARISON:
+  "{A} vs {B} benchmark performance comparison {year}"
+  "{A} vs {B} which is better for {use case}"
+  "{A} vs {B} migration experience"
+
+EXPERIENCE:
+  "{technology} production experience lessons learned"
+  "{technology} gotchas common mistakes"
+  "{technology} site:reddit.com r/programming OR r/webdev"
+
+ACADEMIC:
+  "{concept} arxiv paper {year}"
+  "{concept} survey state of the art"
+  "{algorithm} original paper author"
+
+TRENDING:
+  "{category} new tools emerging {year}"
+  "{topic} developer survey {year}"
+  "awesome-{topic} github curated list"
+```
+
+### Language Strategy
+
+For maximum coverage, search in **both English and the user's language** when relevant:
+
+```
+English: "event-driven architecture microservices patterns"
+Thai:    "สถาปัตยกรรม event-driven ประสบการณ์ production"
+  → Thai results often include local case studies and conference talks
+  → Combine both for broader perspective
+```
+
+---
+
+## Advanced: Source Extraction Protocols
+
+How to extract maximum value from each source type.
+
+### Protocol 1: GitHub Repository Extraction
+
+When researching a GitHub repo, extract these layers systematically:
+
+```
+Layer 1 — Vision & Purpose (README)
+  Extract: What problem does it solve? Who is it for? What's the philosophy?
+  Tool: fetch_webpage(url: repo main page, query: "purpose, motivation, philosophy")
+
+Layer 2 — Architecture (docs/ or source structure)
+  Extract: Module organization, data flow, key abstractions
+  Tool: fetch_webpage(url: docs/architecture.md or similar)
+        github_repo(query: "architecture OR design OR overview")
+  
+  If no architecture docs:
+    fetch_webpage(url: src/ directory listing, query: "module structure")
+    Read 2-3 core source files to infer architecture
+
+Layer 3 — Core Source Code (use RAW URLs)
+  ⚠️ Use raw.githubusercontent.com/{owner}/{repo}/{branch}/{path}
+     NOT github.com/.../blob/... (blob URLs return HTML with GitHub UI noise)
+  
+  Extract: Design patterns, key interfaces, extension mechanisms, data flow
+  Tool: github_repo(query: "interface OR abstract OR pattern OR plugin")
+        fetch_webpage(url: raw URL of core files, query: "patterns, abstractions, logic")
+  
+  For each source file read:
+    - What pattern does it implement?
+    - What are the key abstractions?
+    - How does data flow through it?
+    - How would a developer extend it?
+    - Any clever techniques worth adopting?
+
+Layer 4 — Key Differentiators
+  Extract: What makes this different from alternatives?
+  Tool: fetch_webpage(url: README, query: "unique features, compared to, unlike")
+        webSearch("{project} vs alternatives what makes it different")
+
+Layer 5 — Maturity & Health
+  Extract: Stars, contributors, release frequency, issue response time
+  Tool: fetch_webpage(url: repo main page, query: "stars contributors last release")
+        webSearch("{project} adoption production usage")
+```
+
+**Output Template for GitHub Deep Dive:**
+```markdown
+## {Project Name} — Research Summary
+
+### Purpose & Philosophy
+[1-2 sentences: what it does and WHY it exists]
+
+### Architecture
+[Core modules, data flow diagram, key abstractions]
+
+### Key Design Patterns
+- Pattern 1: [name] — [how it's used, why]
+- Pattern 2: [name] — [how it's used, why]
+
+### What We Can Reuse / Learn From
+- Concept 1: [specific idea] → [how to apply in our project]
+- Concept 2: [specific idea] → [how to apply in our project]
+
+### What We Should NOT Copy (and why)
+- [Decision that doesn't fit our context, with reason]
+
+### Maturity Assessment
+[Stars, contributors, release cadence, bus factor]
+
+### Sources
+[Numbered citations]
+```
+
+### Protocol 2: Documentation Site Extraction
+
+```
+Strategy: Navigate from overview → specific topic → examples
+
+Step 1: Find the docs site
+  webSearch: "{project} official documentation guide"
+  
+Step 2: Read overview/getting-started
+  fetch_webpage(url: docs landing, query: "concepts, architecture, how it works")
+
+Step 3: Read specific topic
+  fetch_webpage(url: relevant doc page, query: "{specific question}")
+
+Step 4: Read examples/tutorials
+  fetch_webpage(url: examples page, query: "code example {specific use case}")
+
+Key: Use focused queries in fetch_webpage to extract relevant sections, 
+     not dump entire pages
+```
+
+### Protocol 3: Academic Paper Extraction
+
+```
+Reading Order: Abstract → Conclusion → Figures → Methodology → Related Work
+
+Step 1: Abstract + Introduction
+  fetch_webpage(url: paper, query: "abstract, contribution, problem statement")
+
+Step 2: Results & Conclusion
+  fetch_webpage(url: paper, query: "results, conclusion, findings, limitations")
+
+Step 3: Key Figures/Tables (if conceptual)
+  fetch_webpage(url: paper, query: "architecture diagram, algorithm, comparison table")
+
+Step 4: Methodology (only if implementing)
+  fetch_webpage(url: paper, query: "method, algorithm steps, pseudocode")
+
+Extract: Problem → Approach → Results → Limitations → Our takeaway
+```
+
+### Protocol 4: Blog/Article Extraction
+
+```
+Strategy: Assess credibility first, then extract
+
+Step 1: Check credibility (from search results snippet)
+  - Author known? Date recent? Venue reputable?
+  - If low credibility → skip, search more
+
+Step 2: Read with focused query
+  fetch_webpage(url: article, query: "{specific fact or insight needed}")
+
+Step 3: Extract structured findings
+  - FACT: [verifiable claim]
+  - OPINION: [author's view — label as opinion]  
+  - CODE: [example that demonstrates the point]
+  - DATA: [benchmark, metric, comparison]
+
+Never: dump raw article content. Always: extract + label + cite.
+```
+
+---
+
+## Graceful Degradation
+
+When tools fail or return poor results, **adapt** — don't give up or retry blindly.
+
+### Tool Failure Responses
+
+| Failure | Cause | Fallback |
+|---------|-------|----------|
+| `webSearch` returns irrelevant results | Poor query | Pivot query (see Multi-Pass Strategy above) |
+| `fetch_webpage` returns empty/error | Page blocked, JS-heavy, paywall | Try cached version: `webSearch "cache:{url}"`, or use search snippets only |
+| `fetch_webpage` returns too much noise | Page has ads/nav/unrelated content | Use a more specific `query` parameter to focus extraction |
+| `github_repo` returns nothing | Wrong repo name, or code doesn't match query | `fetch_webpage` the repo page directly, or `webSearch "{repo name} {query}"` |
+| Rate limited / quota exceeded | Too many calls | Synthesize from what you have — partial research > no research |
+
+### Quality Fallback Chain
+
+```
+IDEAL:     Tool works perfectly → extract high-quality findings
+FALLBACK 1: Tool returns partial → combine with search snippets
+FALLBACK 2: Tool fails → use search result excerpts (lower quality, note it)
+FALLBACK 3: No tool works → use model knowledge + clearly label as "based on training data, not live sources"
+LAST RESORT: Report "unable to verify" — never fabricate citations
+```
+
+### Handling Ephemeral / Dynamic Content
+
+Some content isn't available via tools:
+- **Paywalled articles**: Note "paywall — could not access full content" and summarize from snippets
+- **PDF papers**: `fetch_webpage` may struggle — try HTML versions (arxiv has /abs/ and /html/ versions)
+- **Interactive dashboards**: Describe what the dashboard shows based on search context
+- **Deleted/moved pages**: Use web archive: `fetch_webpage("https://web.archive.org/web/{url}")`
+- **Login-required**: Skip, note "requires authentication", search for public discussions about the content
+
+### When to Stop and Report Partial Findings
+
+```
+STOP when:
+  ✓ Budget exhausted (25 calls max)
+  ✓ 3 consecutive searches return nothing new
+  ✓ Key question answered with HIGH confidence
+  ✓ Remaining questions are LOW priority
+  
+REPORT honestly:
+  "We found strong evidence for Q1-Q3 (HIGH confidence).
+   Q4 remains unanswered — sources were sparse or behind paywalls.
+   Q5 was not researched due to budget limits.
+   Suggested next step: [specific follow-up search]"
+```
+
+---
+
+## Research Output Quality Checklist
+
+Before delivering any research report, verify:
+
+```
+□ Every finding has a confidence level (HIGH/MEDIUM/LOW/CONTESTED)
+□ Every claim has at least one citation (URL or file:line)
+□ Source dates are noted for time-sensitive topics
+□ Contradictions are reported, not hidden
+□ Facts and opinions are clearly labeled
+□ Negative results are included ("searched for X, found nothing")
+□ An actionable takeaway exists (not just information dump)
+□ Local relevance is assessed (how does this apply to our project?)
+□ The report structure matches the user's question depth
+    - Quick question → 3-5 sentences with citations
+    - Deep research → full structured report
+□ Bias warnings are included where applicable
+```
