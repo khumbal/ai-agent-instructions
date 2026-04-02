@@ -59,24 +59,45 @@ Don't follow a rigid pipeline. Follow the evidence — search, read, pivot, synt
 
 ## Tools & How to Use Them Well
 
+All tools below are available — choose the best fit for the task, mix and match freely.
+
+### Web Search
+
+| Tool | Input | Strength | Best For |
+|------|-------|----------|----------|
+| `webSearch` | `query` | Built-in, always available | First move — discover URLs, get snippets, find leads |
+| `mcp_chrome-bot-mc_research` | `query` + `recency` + `deep` + `sources` | Multi-source in 1 call (DDG + news + Wikipedia + Google AI) | Comprehensive research, deep dive |
+| `mcp_chrome-bot-mc_google_search_ai_overview` | `query` + `recency` | AI-synthesized answer + top results | Single focused question with instant synthesis |
+| `mcp_chrome-bot-mc_google_search_ai_mode` | `query` + `recency` | Deep AI synthesis | Complex multi-aspect questions |
+| `mcp_chrome-bot-mc_news_search` | `query` + `recency` + `maxResults` | News-focused with recency | Current events, recent announcements |
+| `mcp_chrome-bot-mc_duckduckgo_search` | `query` + `recency` + `maxResults` | Good technical results, privacy-friendly | Supplementary search, `site:` queries |
+| `mcp_chrome-bot-mc_wikipedia_search` | `query` + `language` | Structured factual content | Definitions, background knowledge |
+
+### Content Reading
+
+| Tool | Input | Strength | Best For |
+|------|-------|----------|----------|
+| `fetch_webpage` | `urls[]` + `query` | Built-in, `query` param focuses extraction | Read page with specific focus — **query is the lever** |
+| `mcp_chrome-bot-mc_web_fetch_content` | `url` | Clean text extraction | Read full article/page content |
+| `mcp_chrome-bot-mc_gemini_summarize_youtube` | `url` | YouTube video summary | Conference talks, tutorials, demos |
+| `mcp_chrome-bot-mc_gemini_chat` | `message` | Ask Gemini follow-up questions | Clarify complex topics, brainstorm |
+
+### Local & Code Search
+
 | Tool | Input | Use When |
 |------|-------|----------|
-| `webSearch` | `query` | First move — discover URLs, get snippets, find leads |
-| `fetch_webpage` | `urls[]` + `query` | Read a page deeply — **query guides extraction** (critical!) |
 | `github_repo` | `repo` (owner/repo) + `query` | Search code inside a specific GitHub repository |
 | `semantic_search` | `query` | Search local codebase by concept |
 | `grep_search` | `query` + `includePattern` | Search local codebase by exact text |
 | `memory` | `command` + `path` | Check past findings in /memories/ |
 
-### The `fetch_webpage` query trick
+### Tips
 
-This is the single biggest quality lever. The `query` parameter **focuses** what gets extracted:
-
-```
-❌  fetch_webpage(urls: [url], query: "")           → dumps everything, noisy
-✓   fetch_webpage(urls: [url], query: "architecture design patterns")  → focused extraction
-✓✓  fetch_webpage(urls: [url], query: "what design decisions and trade-offs does this project make")  → laser focused
-```
+- **`fetch_webpage` query trick** — the `query` param focuses extraction: `fetch_webpage(urls: [url], query: "design decisions and trade-offs")` ≫ empty query
+- **MCP `recency` param** — use instead of `after:YYYY` in query: `recency: "year"` / `"month"` / `"week"` / `"day"`
+- **`webSearch` recency** — append `after:2025-01-01` to query string
+- **Mix tools freely** — e.g. `webSearch` finds URLs → `mcp_chrome-bot-mc_web_fetch_content` reads content
+- **If MCP tool fails** → fallback to `webSearch` / `fetch_webpage`
 
 ### Raw GitHub URLs for code reading
 
@@ -143,22 +164,22 @@ When user says "ค้นหาแนวคิดจาก https://github.com/or
 
 ```
 Batch 1 (parallel):
-  fetch_webpage: [repo URL]  query: "purpose, architecture, core concepts, design philosophy"
-  webSearch: "{project name} architecture design blog explanation"
+  mcp_chrome-bot-mc_web_fetch_content: [repo URL]  OR  fetch_webpage: [repo URL] query: "purpose, architecture, core concepts"
+  mcp_chrome-bot-mc_google_search_ai_overview: "{project name} architecture design blog" (recency: "year")  OR  webSearch: "{project name} architecture design blog explanation"
 
 Batch 2 (informed by Batch 1):
   github_repo: repo="{owner}/{repo}" query: "architecture OR design OR pattern OR core"
-  fetch_webpage: [docs/ or architecture.md URL if found]  query: "design documentation"
+  fetch_webpage: [docs/ or architecture.md URL]  query: "design documentation"  OR  mcp_chrome-bot-mc_web_fetch_content: [docs URL]
 
 Batch 3 — Read source code (raw URLs):
-  fetch_webpage: [raw.githubusercontent.com/.../entry-point]  query: "bootstrap flow, main logic"
-  fetch_webpage: [raw.githubusercontent.com/.../core-types]   query: "interfaces, data model"
-  fetch_webpage: [raw.githubusercontent.com/.../engine]       query: "patterns, data flow, extension"
+  mcp_chrome-bot-mc_web_fetch_content: [raw.githubusercontent.com/.../entry-point]
+  fetch_webpage: [raw.githubusercontent.com/.../core-types]  query: "interfaces, data model"
+  (choose either tool — mcp gives cleaner output, fetch_webpage allows focused query)
 
 Batch 4 (parallel):
-  webSearch: "{project} tutorial how it works internally"
-  webSearch: "{project} vs alternatives"
-  webSearch: "{project} site:reddit.com OR site:news.ycombinator.com"
+  webSearch: "{project} tutorial how it works internally"  OR  mcp_chrome-bot-mc_google_search_ai_overview: same query
+  webSearch: "{project} vs alternatives"  OR  mcp_chrome-bot-mc_duckduckgo_search: same query
+  webSearch: "{project} site:reddit.com OR site:news.ycombinator.com"  OR  mcp_chrome-bot-mc_duckduckgo_search: same query
 
 → Synthesize: vision + architecture + code patterns + what to reuse + what to skip
 ```
@@ -173,14 +194,13 @@ For each source file read, extract:
 ### Quick Comparison (X vs Y)
 
 ```
-Batch 1 (parallel):
-  webSearch: "{X} vs {Y} benchmark comparison {year}"
-  webSearch: "{X} vs {Y} site:stackoverflow.com OR site:reddit.com"
-  webSearch: "{X} official features"
-  webSearch: "{Y} official features"
+Batch 1 (parallel — pick tools that fit):
+  webSearch: "{X} vs {Y} benchmark comparison {year}"  OR  mcp_chrome-bot-mc_research: same query (deep: true, recency: "year")
+  webSearch: "{X} vs {Y} site:stackoverflow.com OR site:reddit.com"  OR  mcp_chrome-bot-mc_duckduckgo_search: same query
+  webSearch: "{X} official features"  (if research tool didn't cover)
 
 Batch 2 (fetch best comparison articles):
-  fetch_webpage: [top 1-2 URLs]  query: "benchmark methodology results trade-offs"
+  fetch_webpage: [top URLs]  query: "benchmark methodology results trade-offs"  OR  mcp_chrome-bot-mc_web_fetch_content: [URLs]
 
 → Synthesize: comparison table + recommendation for user's context
 ```
@@ -188,14 +208,13 @@ Batch 2 (fetch best comparison articles):
 ### Trend / State-of-the-Art
 
 ```
-Batch 1 (parallel):
-  webSearch: "{topic} developer survey {year}"
-  webSearch: "{topic} adoption trend {year}"
-  webSearch: "{topic} site:news.ycombinator.com"
-  webSearch: "{topic} alternatives emerging {year}"
+Batch 1 (parallel — pick tools that fit):
+  webSearch: "{topic} developer survey {year}"  OR  mcp_chrome-bot-mc_research: "{topic} developer survey adoption trend" (deep: true, recency: "year")
+  webSearch: "{topic} adoption trend {year}"  OR  mcp_chrome-bot-mc_news_search: "{topic} announcement release" (recency: "month")
+  webSearch: "{topic} site:news.ycombinator.com"  OR  mcp_chrome-bot-mc_duckduckgo_search: same query
 
 Batch 2 (fetch survey/data pages):
-  fetch_webpage: [survey URL]  query: "adoption data, growth, decline, statistics"
+  fetch_webpage: [survey URL]  query: "adoption data, growth, statistics"  OR  mcp_chrome-bot-mc_web_fetch_content: [survey URL]
 
 → Synthesize: current state + trajectory + risks + alternatives
 ```
@@ -203,14 +222,15 @@ Batch 2 (fetch survey/data pages):
 ### Academic / RFC Lookup
 
 ```
-Batch 1:
-  webSearch: "{topic} arxiv paper {year}"  OR  "{topic} RFC specification"
+Batch 1 (parallel):
+  webSearch: "{topic} arxiv paper {year}"  OR  mcp_chrome-bot-mc_google_search_ai_overview: same query (recency: "year")
+  mcp_chrome-bot-mc_wikipedia_search: "{topic}"  (for background/definition)
 
 Batch 2:
-  fetch_webpage: [paper URL]  query: "abstract, key algorithm, results, limitations"
+  fetch_webpage: [paper URL]  query: "abstract, key algorithm, results, limitations"  OR  mcp_chrome-bot-mc_web_fetch_content: [paper URL]
 
 Batch 3 (if implementing):
-  webSearch: "{algorithm} open source implementation github"
+  webSearch: "{algorithm} open source implementation github"  OR  mcp_chrome-bot-mc_duckduckgo_search: same query
   github_repo: query: "core algorithm"
 
 → Synthesize: problem → approach → results → limitations → our takeaway
@@ -220,11 +240,11 @@ Batch 3 (if implementing):
 
 ```
 Batch 1 (parallel):
-  webSearch: "{question} {year}"
+  webSearch: "{question} {year}"  OR  mcp_chrome-bot-mc_google_search_ai_overview: "{question}" (recency: "year")
   memory: check /memories/repo/ for past findings
 
 Batch 2 (only if needed):
-  fetch_webpage: [best URL]  query: "{specific aspect}"
+  fetch_webpage: [best URL]  query: "{specific aspect}"  OR  mcp_chrome-bot-mc_web_fetch_content: [best URL]
 
 → Answer in 3-5 sentences with citations
 ```
@@ -269,11 +289,15 @@ When sources contradict: newer > older, specific data > vague claims, maintainer
 | Search returns junk | Pivot query (see Query Craft) |
 | `fetch_webpage` returns empty | Try `raw.githubusercontent.com` URL, or use search snippets |
 | `fetch_webpage` returns noise | More specific `query` parameter |
-| `github_repo` finds nothing | `fetch_webpage` the repo page directly |
+| `github_repo` finds nothing | `fetch_webpage` or `mcp_chrome-bot-mc_web_fetch_content` the repo page directly |
+| MCP tools not loaded | `tool_search_tool_regex("mcp_chrome-bot-mc")` first, then call |
+| MCP tool returns empty | Fallback to `webSearch` or `fetch_webpage` |
+| `mcp_chrome-bot-mc_web_fetch_content` returns empty | Try `fetch_webpage` as fallback, or use search snippets |
 | Page is paywalled | Note "paywall", use search snippets only |
 | PDF papers | Try arxiv HTML version (`/html/` instead of `/abs/`) |
 | Deleted page | `fetch_webpage("https://web.archive.org/web/{url}")` |
 | Rate limited | Synthesize from what you have — partial > nothing |
+| YouTube content | `mcp_chrome-bot-mc_gemini_summarize_youtube` for video summary |
 
 **Fallback chain:** Tool works → Tool partial (combine with snippets) → Tool fails (use snippets only) → Nothing works (use training knowledge, clearly labeled)
 

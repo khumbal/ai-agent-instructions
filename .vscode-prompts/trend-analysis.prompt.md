@@ -13,28 +13,34 @@ ${input}
 
 ### Phase 1: Current State
 - `webSearch` for developer surveys and adoption data (State of JS, Stack Overflow survey, etc.)
+- `mcp_chrome-bot-mc_research` for comprehensive multi-source survey data (deep: true, recency: "year")
 - `webSearch` for official announcements, roadmaps, recent releases
+- `mcp_chrome-bot-mc_news_search` for recent announcements, releases (recency: "month")
 - `fetch_webpage` on survey results pages with focused extraction query
+- `mcp_chrome-bot-mc_web_fetch_content` for clean full-page extraction
 
 ### Phase 2: Adoption Signals
 - `webSearch` for npm download trends, GitHub stars growth, job postings
-- `webSearch` for case studies of companies adopting/migrating to/from this technology
+- `mcp_chrome-bot-mc_google_search_ai_overview` for "{topic} adoption" with AI synthesis (recency: "year")
+- `webSearch` / `mcp_chrome-bot-mc_duckduckgo_search` for case studies of companies adopting/migrating
 - `webSearch` for "{topic} adoption {current year}" to find recent data
 
 ### Phase 3: Community Sentiment
-- `webSearch` for "{topic} site:reddit.com r/programming OR r/webdev"
-- `webSearch` for "{topic} site:news.ycombinator.com"
+- `webSearch` / `mcp_chrome-bot-mc_duckduckgo_search` for "{topic} site:reddit.com r/programming OR r/webdev"
+- `webSearch` / `mcp_chrome-bot-mc_duckduckgo_search` for "{topic} site:news.ycombinator.com"
 - `webSearch` for "{topic} developer experience opinion"
+- `fetch_webpage` / `mcp_chrome-bot-mc_web_fetch_content` on best discussion threads for full context
 - Look for consensus patterns: What do most developers agree on?
 
 ### Phase 4: Emerging Competition
-- `webSearch` for alternatives gaining ground
+- `webSearch` / `mcp_chrome-bot-mc_google_search_ai_mode` for alternatives gaining ground (recency: "year")
 - `webSearch` for "{topic} replaced by OR alternative to {current year}"
-- `webSearch` for "awesome-{topic}" curated lists on GitHub
+- `webSearch` / `mcp_chrome-bot-mc_duckduckgo_search` for "awesome-{topic}" curated lists on GitHub
 
 ### Phase 5: Expert Predictions
-- `webSearch` for conference talks, maintainer blog posts, RFC proposals
+- `webSearch` / `mcp_chrome-bot-mc_google_search_ai_overview` for conference talks, maintainer blog posts, RFC proposals
 - `webSearch` for "{topic} future roadmap plans {current year}"
+- `mcp_chrome-bot-mc_gemini_summarize_youtube` for video conference talks if found
 
 ### Phase 6: Synthesize Report
 

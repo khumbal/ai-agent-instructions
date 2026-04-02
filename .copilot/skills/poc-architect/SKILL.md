@@ -112,15 +112,15 @@ User presents a technical idea/approach
 
 ### Source Priority (for feasibility analysis)
 
-| Priority | Source Type | What It Proves | Tools |
+| Priority | Source Type | What It Proves | Tools (choose best fit) |
 |----------|-----------|----------------|-------|
-| 1 | **Academic papers** (arxiv, ACM, IEEE) | Theoretical possibility, algorithmic bounds, formal proofs | `webSearch` → `fetch_webpage` |
-| 2 | **Production case studies** (engineering blogs) | Real-world viability at scale | `webSearch` → `fetch_webpage` |
-| 3 | **Open-source implementations** (GitHub) | Practical implementability, code quality, maturity | `webSearch` → `github_repo` / `fetch_webpage` |
-| 4 | **Benchmarks & comparisons** | Quantitative performance claims | `webSearch` → `fetch_webpage` |
-| 5 | **Community experience** (Reddit, HN, SO) | Real user pain points, gotchas, adoption signals | `webSearch` → `fetch_webpage` |
-| 6 | **Official documentation** | Feature existence, API capabilities | `webSearch` → `fetch_webpage` |
-| 7 | **Expert opinions** (conference talks, interviews) | Directional guidance, industry consensus | `webSearch` |
+| 1 | **Academic papers** (arxiv, ACM, IEEE) | Theoretical possibility, algorithmic bounds, formal proofs | `webSearch` / `mcp_chrome-bot-mc_google_search_ai_overview` → `fetch_webpage` / `mcp_chrome-bot-mc_web_fetch_content` |
+| 2 | **Production case studies** (engineering blogs) | Real-world viability at scale | `webSearch` / `mcp_chrome-bot-mc_research` (deep: true) → `fetch_webpage` / `mcp_chrome-bot-mc_web_fetch_content` |
+| 3 | **Open-source implementations** (GitHub) | Practical implementability, code quality, maturity | `webSearch` / `mcp_chrome-bot-mc_duckduckgo_search` → `github_repo` / `fetch_webpage` |
+| 4 | **Benchmarks & comparisons** | Quantitative performance claims | `webSearch` / `mcp_chrome-bot-mc_google_search_ai_overview` → `fetch_webpage` / `mcp_chrome-bot-mc_web_fetch_content` |
+| 5 | **Community experience** (Reddit, HN, SO) | Real user pain points, gotchas, adoption signals | `webSearch` / `mcp_chrome-bot-mc_duckduckgo_search` → `fetch_webpage` / `mcp_chrome-bot-mc_web_fetch_content` |
+| 6 | **Official documentation** | Feature existence, API capabilities | `fetch_webpage` / `mcp_chrome-bot-mc_web_fetch_content` |
+| 7 | **Expert opinions** (conference talks, interviews) | Directional guidance, industry consensus | `webSearch` / `mcp_chrome-bot-mc_google_search_ai_overview` / `mcp_chrome-bot-mc_gemini_summarize_youtube` (video) |
 
 ### Search Query Templates for Feasibility
 

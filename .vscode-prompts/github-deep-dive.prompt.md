@@ -12,13 +12,13 @@ ${input}
 ## Execution Plan
 
 ### Phase 1: Overview & README
-- `fetch_webpage` the repo's main page with query focused on "purpose, architecture, core concepts, design philosophy"
-- `webSearch` for external articles explaining the project
+- `fetch_webpage` / `mcp_chrome-bot-mc_web_fetch_content` the repo's main page for purpose, architecture, design philosophy
+- `webSearch` / `mcp_chrome-bot-mc_google_search_ai_overview` for external articles explaining the project (recency: "year")
 
 ### Phase 2: Architecture & Source Structure  
-- `fetch_webpage` the source directory structure
+- `fetch_webpage` / `mcp_chrome-bot-mc_web_fetch_content` the source directory structure
 - `github_repo` searching for architecture, design, patterns, core abstractions
-- If docs/ exists, read architecture docs via `fetch_webpage`
+- If docs/ exists, read architecture docs via `fetch_webpage` (query: "design") or `mcp_chrome-bot-mc_web_fetch_content`
 
 ### Phase 3: Read & Interpret Core Source Code
 This is the critical phase — actually reading the code, not just descriptions.
@@ -33,8 +33,7 @@ https://raw.githubusercontent.com/alibaba/hiclaw/main/src/core/engine.ts
 ```
 
 - Use `github_repo` first to **discover** key files (entry points, core modules, type definitions) 
-- Then `fetch_webpage` with **raw.githubusercontent.com** URLs to read full source
-  - Use focused `query` like: "design patterns, key abstractions, data flow"
+- Then `fetch_webpage` (with focused `query`) or `mcp_chrome-bot-mc_web_fetch_content` with **raw.githubusercontent.com** URLs to read full source
 - Read in priority order:
   1. **Entry point** (main, index, app) — understand the bootstrap flow
   2. **Core types/interfaces** — understand the data model and contracts
@@ -48,9 +47,9 @@ https://raw.githubusercontent.com/alibaba/hiclaw/main/src/core/engine.ts
   - Clever techniques worth learning from
 
 ### Phase 4: External Context
-- `webSearch` for tutorials, blog posts explaining the project internals
-- `webSearch` for community sentiment (Reddit, HN)
-- `webSearch` for alternatives and how this project differs
+- `webSearch` / `mcp_chrome-bot-mc_google_search_ai_overview` for tutorials, blog posts explaining the project internals (recency: "year")
+- `webSearch` / `mcp_chrome-bot-mc_duckduckgo_search` for community sentiment — "site:reddit.com OR site:news.ycombinator.com"
+- `webSearch` / `mcp_chrome-bot-mc_research` for alternatives and how this project differs
 
 ### Phase 5: Synthesize Report
 
