@@ -32,7 +32,31 @@ When facing a decision, think naturally: What does the code show? What's the sim
 - **File ops via tools only**: create_file, replace_string_in_file, multi_replace_string_in_file
 - **No direct git operations**: Never run git commands (commit, push, reset, checkout, rebase, merge, stash, tag, branch) directly. Let the user manage git workflow themselves. Only read-only git commands (status, log, diff, show) are acceptable for gathering context.
 
-## Design Verification — think before declaring done
+## Verification Strategy — tiered, not blanket
+
+Use the **lightest verification** that matches the risk. Never run tests mid-implementation.
+
+### Verification tiers (cheapest → most expensive)
+
+| Tier | Tool | When | Cost |
+|------|------|------|------|
+| V0 — Type check | `get_errors` | After every edit | ~0 tokens, instant |
+| V1 — Lint | `get_errors` + lint command | After completing a logical unit | Low |
+| V2 — Affected tests | Run only tests for changed module | After completing a feature/refactor | Medium |
+| V3 — Full suite | Run all tests | Only when shared types/interfaces change | High |
+
+### Multi-step implementation workflow
+
+When a task spans multiple files:
+1. **Implement ALL files first** — no testing between edits
+2. **V0 after each file** — `get_errors` only (catches typos, imports)
+3. **V1 after all files done** — lint check once
+4. **V2 before declaring done** — run affected tests once
+5. **V3 only if** shared types changed (interfaces, schemas, core types)
+
+**Never**: fix test failures on half-done features. Finish implementation → then verify.
+
+### Design verification — think before declaring done
 After implementing but before declaring done, verify **design correctness** — not just "does it compile":
 
 - **Trace data values, not just types**: When connecting two subsystems, verify the runtime values actually match. A field named `context_tags` in System A might contain `["validation", "jwt"]` while System B produces `["developer", "implement"]` — types match (`string[]`), values never will. Read the producer to see what values it generates, then verify the consumer matches.
@@ -79,4 +103,5 @@ Limit to 2-3 focused phases per conversation.
 - Batch independent tool calls in parallel
 - Large files (>150 lines): grep target first, then read ±20 lines
 - Terminal output: pipe through `| head -50` or `| tail -50`
+- **Todo tracking**: Use only for ≥4-step tasks. For 1-3 steps, just do them. Max 3 todo updates per task (init, midpoint, done).
 - **Before ending**: if new patterns/failures emerged → `@MemoryManager` harvest to repo memory

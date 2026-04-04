@@ -2,7 +2,7 @@
 description: "Deep-research and architectural synthesis of agentic system topics — protocols, multi-agent orchestration, design patterns. Produces structured analysis with comparison tables, Mermaid diagrams, and evidence-backed critique."
 mode: "agent"
 model: ["Claude Opus 4.6 (copilot)", "Claude Sonnet 4.5 (copilot)"]
-tools: ["search", "fetch", "vscode-websearchforcopilot_webSearch", "search/semantic_search", "search/grep_search", "mcp_chrome-bot-mc_research", "mcp_chrome-bot-mc_google_search_ai_overview", "mcp_chrome-bot-mc_web_fetch_content", "mcp_chrome-bot-mc_google_search_ai_mode"]
+tools: ["search", "fetch", "create_file", #edit/createFile, "vscode-websearchforcopilot_webSearch", "search/semantic_search", "search/grep_search", "mcp_chrome-bot-mc_research", "mcp_chrome-bot-mc_google_search_ai_overview", "mcp_chrome-bot-mc_web_fetch_content", "mcp_chrome-bot-mc_google_search_ai_mode"]
 argument-hint: "Topic and optional comparison targets, e.g. 'Agentic Worker Protocol vs MCP vs A2A'"
 ---
 # Agentic Research & Design
@@ -28,6 +28,7 @@ Research the fundamental architecture of the target topic:
 
 **Tools:**
 - `webSearch` or `mcp_chrome-bot-mc_research` for official specs and documentation (deep: true, recency: "year")
+- `mcp_chrome-bot-mc_google_search_ai_mode` for deep AI-synthesized answers on technical specs (recency: "year")
 - `fetch_webpage` on specification pages with focused extraction
 - `mcp_chrome-bot-mc_web_fetch_content` for clean full-page spec extraction
 - `semantic_search` / `grep_search` for related implementations in local codebase
@@ -46,7 +47,8 @@ Compare with alternative protocols/systems. Produce a comparison table covering:
 
 **Tools:**
 - `webSearch` for comparison articles and benchmarks
-- `mcp_chrome-bot-mc_google_search_ai_overview` for synthesized comparisons (recency: "year")
+- `mcp_chrome-bot-mc_google_search_ai_mode` for multi-aspect deep comparison with AI synthesis (recency: "year")
+- `mcp_chrome-bot-mc_google_search_ai_overview` for quick synthesized comparisons (recency: "year")
 - `mcp_chrome-bot-mc_duckduckgo_search` for community comparisons ("site:reddit.com", "site:github.com")
 
 ### 1c. Interoperability Analysis

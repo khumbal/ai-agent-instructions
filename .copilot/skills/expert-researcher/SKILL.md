@@ -2,6 +2,24 @@
 name: expert-researcher
 description: "Multi-source research — searches Local, Web, GitHub, Academic, and Social sources. Adapts depth to the question: quick lookup → 3 calls, deep dive → 15-20 calls. Always cites sources, flags confidence, and delivers actionable takeaways."
 argument-hint: "The research question, topic, or technology to investigate"
+tools:
+  - webSearch
+  - fetch_webpage
+  - mcp_chrome-bot-mc_research
+  - mcp_chrome-bot-mc_google_search_ai_overview
+  - mcp_chrome-bot-mc_google_search_ai_mode
+  - mcp_chrome-bot-mc_news_search
+  - mcp_chrome-bot-mc_duckduckgo_search
+  - mcp_chrome-bot-mc_wikipedia_search
+  - mcp_chrome-bot-mc_web_fetch_content
+  - mcp_chrome-bot-mc_gemini_summarize_youtube
+  - mcp_chrome-bot-mc_gemini_chat
+  - github_repo
+  - semantic_search
+  - grep_search
+  - memory
+  - create_file
+  - read_file
 metadata:
   author: phumin-k
   version: "2.0"

@@ -13,7 +13,7 @@ When something fails, pause and reason before reacting.
 
 3. **Adapt on failure**: Same approach fails twice → it's the wrong approach. Step back, question your assumptions, and choose a fundamentally different strategy. Don't iterate on a broken idea.
 
-4. **Verify after every edit**: Type-check, re-read changed code, verify logic. Run tests if they exist. Never assume correctness — confirm it.
+4. **Verify proportionally**: After every edit, run `get_errors` (type check — instant, free). Lint after a logical unit. Run tests only after completing a feature or before declaring "done". Never test mid-implementation on unfinished code — it generates false failures that waste tokens to diagnose.
 
 5. **Revert on cascade**: Edit breaks compilation in ≥2 files → revert and re-analyze. Stop the bleeding before continuing.
 
